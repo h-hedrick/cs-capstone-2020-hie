@@ -23,6 +23,7 @@ db = SQLAlchemy(app)
 def main():
 	print("Building database: {}".format(yam['mysql_db']))
 	init_model()
+	print("Database Built, surprisingly")
 
 def init_model():
 	"""Initializes the database and database tables with relationships"""
@@ -34,6 +35,8 @@ def init_model():
 	commit
 
 	'''
+	db.create_all()
+	db.session.commit()
 
 ###########################################
 # Database Table Model and Relationships  #
@@ -47,7 +50,7 @@ class Students(db.Model):
 	enrollment_id = db.relationship("Enrollments", backref='Students', lazy=True)
 
 class HiesStudents(db.Model):
-	student_id = db.Column(db.Integer, db.ForeignKey("students.su_id"), nullable=False)
+	student_id = db.Column(db.Integer, db.ForeignKey("students.su_id"), primary_key=True)
 	hie_id = db.Column(db.Integer, db.ForeignKey("high_impact_expierences.hie_id"), nullable=False)
 
 class HighImpactExpierences(db.Model):
@@ -78,6 +81,7 @@ class Demographics(db.Model):
 
 class Races(db.Model):
 	race_id = db.Column(db.Integer, primary_key=True)
+	student_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
 	first_race = db.Column(db.String(20), nullable=False)
 	second_race = db.Column(db.String(20))
 
@@ -90,7 +94,7 @@ class Enrollments(db.Model):
 
 class GraduationClasses(db.Model):
 	graduation_id = db.Column(db.Integer, primary_key=True)
-	expected_term = db.relationship("Terms", backref='GraduationClasses', lazy=True, nullable=False)
+	expected_term = db.relationship("Terms", backref='GraduationClasses', lazy=True)
 	actual_term = db.relationship("Terms", backref='GraduationClasses', lazy=True)
 
 class LeaveOfAbsences(db.Model):
