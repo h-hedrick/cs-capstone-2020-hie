@@ -39,9 +39,9 @@ def init_model():
 	db.drop_all()
 	db.create_all()
 	db.session.commit()
-	test = Terms(term='Spring', year=1997)
-	test.saveToDB()
-	print(test)
+	# test = Terms(term='Spring', year=1997)
+	# test.saveToDB()
+	# print(test)
 
 ###########################################
 # Database Table Model and Relationships  #
@@ -51,12 +51,22 @@ class Students(db.Model):
 	__tablename__ = "students"
 	su_id = db.Column(db.Integer, primary_key=True)
 	demographic_id = db.relationship("Demographics", backref='students', lazy=True)
-	hiesTaken = db.relationship("HighImpactExpierences", backref='students', lazy=True)
+	hieTaken = db.relationship("HighImpactExpierences", backref='students', lazy=True)
 	enrollment_id = db.relationship("Enrollments", backref='students', lazy=True)
 
-# class HiesStudents(db.Model):
-# 	student_id = db.Column(db.Integer, db.ForeignKey("students.su_id"), primary_key=True)
-# 	hie_id = db.Column(db.Integer, db.ForeignKey("high_impact_expierences.hie_id"), nullable=False)
+	def __init__(self, id):
+		self.su_id = id
+
+	# ToString method
+	def __repr__(self):
+		return "[STUDENTS:SU_id=%d, Demographic=%d, HIE_Taken=%d, Enrollment_Status=%d]".format(
+			self.su_id, self.demographic_id, self.hieTaken, self.enrollment_id)
+		
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
+
 
 class HighImpactExpierences(db.Model):
 	__tablename__ = "high_impact_expierences"
@@ -67,26 +77,44 @@ class HighImpactExpierences(db.Model):
 	location_id = db.relationship("Locations", backref='high_impact_expierences', lazy=True)
 	term_id = db.relationship("Terms", backref='high_impact_expierences', lazy=True)
 
+	def __init__(self, su_id, hie_type, hie_course_number):
+		self.su_id = su_id
+		self.hie_type = hie_type
+		self.hie_course_number = hie_course_number
+
+	# ToString method
+	def __repr__(self):
+		return "[HIE:id=%d, SU_ID=%d, Type=%s, Course_Num=%s, Location=%d, Term=%d]".format(
+			self.hie_id, self.su_id, self.hie_type, self.hie_course_number, self.location_id, self.term_id)
+		
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
+
 class Terms(db.Model):
 	__tablename__ = "terms"
 	term_id = db.Column(db.Integer, primary_key=True)
 	term = db.Column(db.String(6))
 	year = db.Column(db.Integer, nullable=False)
 
-	# Basically, a toString() method
-	def __repr__(self):
-		return "[TERMS:id=%d, term=%s, year=%d]".format(self.id, self.term, self.year)
 
-	# init to define/create new entries
 	def __init__(self, term, year):
+		'''Constructor. Handles entry creation for the table object. All values passed are
+			by this method.'''
 		self.term = term.upper()
 		self.year = year
+
+	# ToString Method
+	def __repr__(self):
+		return "[TERM:id=%d, Term=%s, Year=%d]".format(self.term_id, self.term, self.year)
 	
-	# quick save to DB method
 	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
 		db.session.add(self)
 		db.session.commit()
 
+	### Methods for the table to enable search functions for queries. Individual query per type of search. ###
 	@classmethod
 	def searchTerms(cls, term):
 		id = db.session.query(cls).filter(cls.term == term)
@@ -105,14 +133,45 @@ class Locations(db.Model):
 	london_flag = db.Column(db.Boolean)
 	dc_flag = db.Column(db.Boolean)
 
+	def __init__(self, hie_id, london_flag, dc_flag):
+		self.hie_id = hie_id
+		self.london_flag = london_flag
+		self.dc_flag = dc_flag
+
+	# ToString method
+	def __repr__(self):
+		return "[LOCATION:id=%d, HIE_ID=%d, City=%d, Country=%d, London?=%b, DC?=%b]".format(
+			self.location_id, self.hie_id, self.city_id, self.country_id, self.london_flag, self.dc_flag)
+		
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
+
 class Demographics(db.Model):
 	__tablename__ = "demographics"
 	demographic_id = db.Column(db.Integer, primary_key=True)
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
-	pell_flag = db.Column(db.Boolean)
+	pell_flag = db.Column(db.Boolean, nullable=False)
 	sex = db.Column(db.String(1), nullable=False)
 	race_id = db.relationship("Races", backref='demographics', lazy=True)
-	first_gen_flag = db.Column(db.Boolean)
+	first_gen_flag = db.Column(db.Boolean, nullable=False)
+
+	def __init__(self, su_id, pell, sex, first_gen):
+		self.su_id = su_id
+		self.pell_flag = pell
+		self.sex = sex
+		self.first_gen_flag = first_gen
+
+	# ToString method
+	def __repr__(self):
+		return "[DEMOGRAPHIC:id=%d, SU_ID=%d, Sex=%s, Race=%d, Pell_Grant?=%b, First_Gen?=%b]".format(
+			self.demographic_id, self.su_id, self.sex, self.race_id, self.pell_flag, self.first_gen_flag)
+		
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
 
 class Races(db.Model):
 	__tablename__ = "races"
@@ -120,6 +179,21 @@ class Races(db.Model):
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
 	first_race = db.Column(db.String(20), nullable=False)
 	second_race = db.Column(db.String(20))
+
+	def __init__(self, su_id, first_race, second_race):
+		self.su_id = su_id
+		self.first_race = first_race
+		self.second_race = second_race
+
+	# ToString method
+	def __repr__(self):
+		return "[RACE:id=%d, SU_ID=%d, Race1=%s, Race2=%s]".format(
+			self.race_id, self.su_id, self.first_race, self.second_race)
+		
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
 
 class Enrollments(db.Model):
 	__tablename__ = "enrollments"
@@ -130,12 +204,38 @@ class Enrollments(db.Model):
 	graduation_id = db.relationship("GraduationClass", backref='enrollments', lazy=True)
 	loa_id = db.relationship("LeaveOfAbsences", backref='enrollments', lazy=True)
 
+	def __init__(self, su_id):
+		self.su_id = su_id
+
+	# ToString method
+	def __repr__(self):
+		return "[ENROLLMENT:id=%d, SU_ID=%d, FYS_Term=%d, AES_Term=%d, Grad_ID=%d, LOA=%d]".format(
+			self.enrollment_id, self.su_id, self.fys_term, self.aes_term, self.graduation_id, self.loa_id)
+		
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
+
 class GraduationClasses(db.Model):
 	__tablename__ = "graduation_class"
 	graduation_id = db.Column(db.Integer, primary_key=True)
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
 	expected_term = db.relationship("Terms", backref='graduation_class', lazy=True)
 	actual_term = db.relationship("Terms", backref='graduation_class', lazy=True)
+
+	def __init__(self, su_id):
+		self.su_id = su_id
+
+	# ToString method
+	def __repr__(self):
+		return "[GRAD_CLASS:id=%d, SU_ID=%d, ExpGrad=%d, ActGrad=%d]".format(
+			self.graduation_id, self.su_id, self.expected_term, self.actual_term)
+		
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
 
 class LeaveOfAbsences(db.Model):
 	__tablename__ = "leave_of_absences"
@@ -146,16 +246,56 @@ class LeaveOfAbsences(db.Model):
 	end_term = db.relationship("Terms", backref='leave_of_absences', lazy=True)
 	loa_description = db.Column(db.Text)
 
-class cities(db.Model):
+	def __init__(self, su_id, enrollment_id, description):
+		self.su_id = su_id
+		self.enrollment_id = enrollment_id
+		self.loa_description = description
+
+	# ToString method
+	def __repr__(self):
+		return "[LOA:id=%d, SU_ID=%d, Enrollment=%d, Start=%d, End=%d \n --> Description: %s]".format(
+			self.loa_id, self.su_id, self.enrollment_id, self.start_term, self.end_term, self.loa_description)
+		
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
+
+class Cities(db.Model):
 	__tablename__ = 'cities'
 	city_id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.Text, nullable=False)
 	country_id = db.relationship('Countries', backref='cities', lazy=True)
 
-class countries(db.Model):
+	def __init__(self, name, country_id):
+		self.name = name
+		self.country_id # = get query?
+	
+	# ToString method
+	def __repr__(self):
+		return "[City:id=%d, Name=%s, Country=%d]".format(self.id, self.name, self.country_id)
+
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
+
+class Countries(db.Model):
 	__tablename__ = 'countries'
 	country_id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.Text, unique=True, nullable=False)
+
+	def __init__(self, name):
+		self.name = name
+	
+	# ToString method
+	def __repr__(self):
+		return "[COUNTRIES:id=%d, name=%s]".format(self.country_id, self.name)
+		
+	def saveToDB(self):
+		'''Quicksave method. Automatically commits and saves entry to db.'''
+		db.session.add(self)
+		db.session.commit()
 
 if __name__ == '__main__':
 	main()
