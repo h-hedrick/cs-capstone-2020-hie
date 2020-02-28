@@ -39,20 +39,39 @@ def init_model():
 	db.drop_all()
 	db.create_all()
 	db.session.commit()
-	# test = Terms(term='Spring', year=1997)
-	# test.saveToDB()
-	# print(test)
+	test = Terms(term='Spring', year=1997)
+	test.saveToDB()
 
 ###########################################
 # Database Table Model and Relationships  #
 ###########################################
 
+termToHIE = db.Table('term_hie',
+	db.Column('term_id', db.Integer, db.ForeignKey('terms.term_id')),
+	db.Column('hie_id', db.Integer, db.ForeignKey('high_impact_expierences.hie_id'))
+)
+
+termToGrad = db.Table('term_grad',
+	db.Column('term_id', db.Integer, db.ForeignKey('terms.term_id')),
+	db.Column('grad_id', db.Integer, db.ForeignKey('graduation_class.graduation_id'))
+)
+
+termToEnroll = db.Table('term_enroll',
+	db.Column('term_id', db.Integer, db.ForeignKey('terms.term_id')),
+	db.Column('enrollment_id', db.Integer, db.ForeignKey('enrollments.enrollment_id'))
+)
+
+# termToLoa = db.Table('term_loa',
+# 	db.Column('term_id', db.Integer, db.ForeignKey('terms.term_id')),
+# 	db.Column('loa_id', db.Integer, db.ForeignKey('leave_of_absences.loa_id'))
+# )
+
 class Students(db.Model):
 	__tablename__ = "students"
 	su_id = db.Column(db.Integer, primary_key=True)
-	demographic_id = db.relationship("Demographics", backref='students', lazy=True)
-	hieTaken = db.relationship("HighImpactExpierences", backref='students', lazy=True)
-	enrollment_id = db.relationship("Enrollments", backref='students', lazy=True)
+	demographic_id = db.relationship("Demographics", backref='students.demographic_id', lazy=True)
+	hie_id = db.relationship("HighImpactExpierences", backref='students.hie_id', lazy=True)
+	enrollment_id = db.relationship("Enrollments", backref='students.enrollment_id', lazy=True)
 
 	def __init__(self, id):
 		self.su_id = id
@@ -60,7 +79,7 @@ class Students(db.Model):
 	# ToString method
 	def __repr__(self):
 		return "[STUDENTS:SU_id=%d, Demographic=%d, HIE_Taken=%d, Enrollment_Status=%d]".format(
-			self.su_id, self.demographic_id, self.hieTaken, self.enrollment_id)
+			self.su_id, self.demographic_id, self.hie_id, self.enrollment_id)
 		
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
@@ -74,8 +93,8 @@ class HighImpactExpierences(db.Model):
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
 	hie_type = db.Column(db.String(50), nullable=False)
 	hie_course_number = db.Column(db.String(50))
-	location_id = db.relationship("Locations", backref='high_impact_expierences', lazy=True)
-	term_id = db.relationship("Terms", backref='high_impact_expierences', lazy=True)
+	location_id = db.relationship("Locations", backref='high_impact_expierences.location_id', lazy=True)
+	term_id = db.relationship("Terms", secondary=termToHIE, backref='termToHIE.term_id', lazy=True)
 
 	def __init__(self, su_id, hie_type, hie_course_number):
 		self.su_id = su_id
@@ -115,21 +134,21 @@ class Terms(db.Model):
 		db.session.commit()
 
 	### Methods for the table to enable search functions for queries. Individual query per type of search. ###
-	@classmethod
-	def searchTerms(cls, term):
-		id = db.session.query(cls).filter(cls.term == term)
-		# if id is NONE:
-		# 	# create new term if none exists
-		# else:
-			# print(type(id))
-			# return id
+	# @classmethod
+	# def searchTerms(cls, term):
+	# 	id = db.session.query(cls).filter(cls.term == term)
+	# 	# if id is NONE:
+	# 	# 	# create new term if none exists
+	# 	# else:
+	# 		# print(type(id))
+	# 	return id
 
 class Locations(db.Model):
 	__tablename__ = "locations"
 	location_id = db.Column(db.Integer, primary_key=True)
 	hie_id = db.Column(db.Integer, db.ForeignKey('high_impact_expierences.hie_id'))
-	city_id = db.relationship("Cities", backref="locations", lazy=True)
-	country_id = db.relationship("Countries", backref="locations", lazy=True)
+	city_id = db.relationship("Cities", backref="locations.city_id", lazy=True)
+	country_id = db.relationship("Countries", backref="locations.country_id", lazy=True)
 	london_flag = db.Column(db.Boolean)
 	dc_flag = db.Column(db.Boolean)
 
@@ -154,7 +173,7 @@ class Demographics(db.Model):
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
 	pell_flag = db.Column(db.Boolean, nullable=False)
 	sex = db.Column(db.String(1), nullable=False)
-	race_id = db.relationship("Races", backref='demographics', lazy=True)
+	race_id = db.relationship("Races", backref='demographics.race_id', lazy=True)
 	first_gen_flag = db.Column(db.Boolean, nullable=False)
 
 	def __init__(self, su_id, pell, sex, first_gen):
@@ -177,6 +196,7 @@ class Races(db.Model):
 	__tablename__ = "races"
 	race_id = db.Column(db.Integer, primary_key=True)
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
+	demographic_id = db.Column(db.Integer, db.ForeignKey('demographics.demographic_id'))
 	first_race = db.Column(db.String(20), nullable=False)
 	second_race = db.Column(db.String(20))
 
@@ -199,18 +219,18 @@ class Enrollments(db.Model):
 	__tablename__ = "enrollments"
 	enrollment_id = db.Column(db.Integer, primary_key=True)
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
-	fys_term = db.relationship("Terms", backref='enrollments', lazy=True)
-	aes_term = db.relationship("Terms", backref='enrollments', lazy=True)
-	graduation_id = db.relationship("GraduationClass", backref='enrollments', lazy=True)
-	loa_id = db.relationship("LeaveOfAbsences", backref='enrollments', lazy=True)
+	fys_aes_term = db.relationship("Terms", secondary=termToEnroll, backref='termToEnroll.term_id', lazy=True)
+	fys_flag = db.Column(db.Boolean, nullable=False) # True if had FYS, False if transfered and had AES
+	graduation_id = db.relationship("GraduationClasses", backref='enrollments.graduation_id', lazy=True)
+	# loa_id = db.relationship("LeaveOfAbsences", backref='enrollments.loa_id', lazy=True)
 
 	def __init__(self, su_id):
 		self.su_id = su_id
 
 	# ToString method
 	def __repr__(self):
-		return "[ENROLLMENT:id=%d, SU_ID=%d, FYS_Term=%d, AES_Term=%d, Grad_ID=%d, LOA=%d]".format(
-			self.enrollment_id, self.su_id, self.fys_term, self.aes_term, self.graduation_id, self.loa_id)
+		return "[ENROLLMENT:id=%d, SU_ID=%d, FYS_Term=%d, AES_Term=%d, Grad_ID=%d]".format(
+			self.enrollment_id, self.su_id, self.fys_term, self.aes_term, self.graduation_id)
 		
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
@@ -220,9 +240,10 @@ class Enrollments(db.Model):
 class GraduationClasses(db.Model):
 	__tablename__ = "graduation_class"
 	graduation_id = db.Column(db.Integer, primary_key=True)
+	enrollment_id = db.Column(db.Integer, db.ForeignKey('enrollments.enrollment_id'))
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
-	expected_term = db.relationship("Terms", backref='graduation_class', lazy=True)
-	actual_term = db.relationship("Terms", backref='graduation_class', lazy=True)
+	graduation_term = db.relationship("Terms", secondary=termToGrad, backref='termToGrad.term_id', lazy=True)
+	graduated = db.Column(db.Boolean)
 
 	def __init__(self, su_id):
 		self.su_id = su_id
@@ -237,35 +258,34 @@ class GraduationClasses(db.Model):
 		db.session.add(self)
 		db.session.commit()
 
-class LeaveOfAbsences(db.Model):
-	__tablename__ = "leave_of_absences"
-	loa_id = db.Column(db.Integer, primary_key=True)
-	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
-	enrollment_id = db.Column(db.Integer, db.ForeignKey('enrollments.enrollment_id'))
-	start_term = db.relationship("Terms", backref='leave_of_absences', lazy=True)
-	end_term = db.relationship("Terms", backref='leave_of_absences', lazy=True)
-	loa_description = db.Column(db.Text)
+# class LeaveOfAbsences(db.Model):
+# 	__tablename__ = "leave_of_absences"
+# 	loa_id = db.Column(db.Integer, primary_key=True)
+# 	enrollment_id = db.Column(db.Integer, db.ForeignKey('enrollments.enrollment_id'))
+# 	start_term = db.relationship("Terms", secondary=termToLoa, backref='termToLoa.term_id', lazy=True)
+# 	end_term = db.relationship("Terms", secondary=termToLoa, backref='termToLoa.term_id', lazy=True)
+# 	loa_description = db.Column(db.Text)
 
-	def __init__(self, su_id, enrollment_id, description):
-		self.su_id = su_id
-		self.enrollment_id = enrollment_id
-		self.loa_description = description
+# 	def __init__(self, su_id, enrollment_id, description):
+# 		self.su_id = su_id
+# 		self.enrollment_id = enrollment_id
+# 		self.loa_description = description
 
-	# ToString method
-	def __repr__(self):
-		return "[LOA:id=%d, SU_ID=%d, Enrollment=%d, Start=%d, End=%d \n --> Description: %s]".format(
-			self.loa_id, self.su_id, self.enrollment_id, self.start_term, self.end_term, self.loa_description)
+# 	# ToString method
+# 	def __repr__(self):
+# 		return "[LOA:id=%d, SU_ID=%d, Enrollment=%d, Start=%d, End=%d \n --> Description: %s]".format(
+# 			self.loa_id, self.su_id, self.enrollment_id, self.start_term, self.end_term, self.loa_description)
 		
-	def saveToDB(self):
-		'''Quicksave method. Automatically commits and saves entry to db.'''
-		db.session.add(self)
-		db.session.commit()
+# 	def saveToDB(self):
+# 		'''Quicksave method. Automatically commits and saves entry to db.'''
+# 		db.session.add(self)
+# 		db.session.commit()
 
 class Cities(db.Model):
 	__tablename__ = 'cities'
 	city_id = db.Column(db.Integer, primary_key=True)
+	loc_id = db.Column(db.Integer, db.ForeignKey('locations.location_id'))
 	name = db.Column(db.Text, nullable=False)
-	country_id = db.relationship('Countries', backref='cities', lazy=True)
 
 	def __init__(self, name, country_id):
 		self.name = name
@@ -283,6 +303,7 @@ class Cities(db.Model):
 class Countries(db.Model):
 	__tablename__ = 'countries'
 	country_id = db.Column(db.Integer, primary_key=True)
+	loc_id = db.Column(db.Integer, db.ForeignKey('locations.location_id'))
 	name = db.Column(db.Text, unique=True, nullable=False)
 
 	def __init__(self, name):
