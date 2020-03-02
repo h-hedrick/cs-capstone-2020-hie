@@ -39,8 +39,11 @@ def init_model():
 	db.drop_all()
 	db.create_all()
 	db.session.commit()
-	test = Terms(term='Spring', year=1997)
-	test.saveToDB()
+
+	#test adding to multiple relation tables
+	stu = Students('12345')
+	hie = HighImpactExpierences(stu.su_id, 'SCOPE', 'CSC200')
+	hie.location_id = 
 
 ###########################################
 # Database Table Model and Relationships  #
@@ -195,7 +198,7 @@ class Demographics(db.Model):
 class Races(db.Model):
 	__tablename__ = "races"
 	race_id = db.Column(db.Integer, primary_key=True)
-	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
+	# su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
 	demographic_id = db.Column(db.Integer, db.ForeignKey('demographics.demographic_id'))
 	first_race = db.Column(db.String(20), nullable=False)
 	second_race = db.Column(db.String(20))
@@ -241,7 +244,7 @@ class GraduationClasses(db.Model):
 	__tablename__ = "graduation_class"
 	graduation_id = db.Column(db.Integer, primary_key=True)
 	enrollment_id = db.Column(db.Integer, db.ForeignKey('enrollments.enrollment_id'))
-	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
+	# su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
 	graduation_term = db.relationship("Terms", secondary=termToGrad, backref='termToGrad.term_id', lazy=True)
 	graduated = db.Column(db.Boolean)
 
