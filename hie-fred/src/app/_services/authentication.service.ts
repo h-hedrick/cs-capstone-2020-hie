@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { User } from '../_models';
+import { config } from 'process';
 
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
