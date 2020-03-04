@@ -1,16 +1,16 @@
+//this class is an Angular App Module, which groups together related components (?)
+
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { LoginComponent } from './login/login.component';
-import { NewLoginComponentComponent } from './new-login-component/new-login-component.component';
+import { loginComponent } from './loginComponent/loginComponent.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    LoginComponent,
-    NewLoginComponentComponent
+    loginComponent
   ],
   imports: [
     BrowserModule,
