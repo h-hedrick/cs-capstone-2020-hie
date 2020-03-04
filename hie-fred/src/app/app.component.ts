@@ -8,5 +8,5 @@ import { Component } from '@angular/core';
 
 export class AppComponent {
   title = 'hie-fred';
-  loggedIn = true; // how do we make this change?
+  loggedIn = false; // how do we make this change?
 }
