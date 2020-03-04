@@ -40,10 +40,19 @@ def init_model():
 	db.create_all()
 	db.session.commit()
 
-	#test adding to multiple relation tables
-	stu = Students('12345')
-	hie = HighImpactExpierences(stu.su_id, 'SCOPE', 'CSC200')
-	hie.location_id = 
+	# #test adding to multiple relation tables
+	# stu = Students('12345')
+	# hie = HighImpactExpierences(stu.su_id, 'SCOPE', 'CSC200')
+	# hie.location_id = 
+
+	testRace = Races()
+	testRace.createNewRace(first_race="vulcan", second_race="human")
+	testRace.saveToDB()
+
+	# testDemo = Demographics()
+
+
+	# testStudent = Students(12345)
 
 ###########################################
 # Database Table Model and Relationships  #
@@ -83,7 +92,10 @@ class Students(db.Model):
 	def __repr__(self):
 		return "[STUDENTS:SU_id=%d, Demographic=%d, HIE_Taken=%d, Enrollment_Status=%d]".format(
 			self.su_id, self.demographic_id, self.hie_id, self.enrollment_id)
-		
+
+	# @classmethod
+	# def createNewStudent(cls, su_id, demographic_id, hie_id, enrollment_id)
+
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
 		db.session.add(self)
@@ -179,17 +191,31 @@ class Demographics(db.Model):
 	race_id = db.relationship("Races", backref='demographics.race_id', lazy=True)
 	first_gen_flag = db.Column(db.Boolean, nullable=False)
 
-	def __init__(self, su_id, pell, sex, first_gen):
-		self.su_id = su_id
-		self.pell_flag = pell
-		self.sex = sex
-		self.first_gen_flag = first_gen
+	def __init__(self, **kwargs):
+		for key, value in kwargs.items():
+			if key == "su_id":
+				self.su_id = su_id
+			if key == "pell":
+				self.pell_flag = pell
+			if key == "sex":
+				self.sex = sex
+			if key == "first_gen":
+				self.first_gen_flag = first_gen
+			if key == "first_race":
+				self.race_id = getRace(kwargs.get("first_race"), kwargs.get("second_race"))
 
 	# ToString method
 	def __repr__(self):
 		return "[DEMOGRAPHIC:id=%d, SU_ID=%d, Sex=%s, Race=%d, Pell_Grant?=%b, First_Gen?=%b]".format(
 			self.demographic_id, self.su_id, self.sex, self.race_id, self.pell_flag, self.first_gen_flag)
-		
+
+	def getRace(self, first_race, second_race):
+		raceProfile = Races.query.filter((Races.first_race == first_race) | (Races.second_race == second_race)).first()
+		if raceProfile is None:
+			# if none, create new entry in the Races table
+			raceProfile = Races(self.demographic_id, first_race, second_race)
+		return raceProfile.race_id
+
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
 		db.session.add(self)
@@ -198,21 +224,24 @@ class Demographics(db.Model):
 class Races(db.Model):
 	__tablename__ = "races"
 	race_id = db.Column(db.Integer, primary_key=True)
-	# su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
 	demographic_id = db.Column(db.Integer, db.ForeignKey('demographics.demographic_id'))
 	first_race = db.Column(db.String(20), nullable=False)
 	second_race = db.Column(db.String(20))
 
-	def __init__(self, su_id, first_race, second_race):
-		self.su_id = su_id
-		self.first_race = first_race
-		self.second_race = second_race
+	def __init__(self, **kwargs):
+		if #working on recursive population, check on demo for race in init. possible?
+		if "first_race" in kwargs:
+			if "second_race" in kwargs:
+				self.searchRaces(kwargs.get("first_race"), kwargs.get("second_race"))
+			else:
+				self.searchRaces(kwargs.get("first_race"), None)
 
 	# ToString method
 	def __repr__(self):
-		return "[RACE:id=%d, SU_ID=%d, Race1=%s, Race2=%s]".format(
-			self.race_id, self.su_id, self.first_race, self.second_race)
-		
+		return "[RACE:id=%d, demographic_id=%d, Race1=%s, Race2=%s]".format(
+			self.race_id, self.demographic_id, self.first_race, self.second_race)
+
+	@classmethod
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
 		db.session.add(self)
