@@ -5,6 +5,8 @@ import { Component } from '@angular/core';
   templateUrl: './app.component.html', //file where <app-root> can be found
   styleUrls: ['./app.component.css']
 })
+
 export class AppComponent {
   title = 'hie-fred';
+  loggedIn = true; // how do we make this change?
 }

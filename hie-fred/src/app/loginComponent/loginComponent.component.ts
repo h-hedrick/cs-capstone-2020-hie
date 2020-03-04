@@ -3,12 +3,11 @@ import { componentFactoryName } from '@angular/compiler';
 
 @Component({
   selector: 'loginComponent', // inject with <loginComponent>...</loginComponent>
-  templateUrl: '../app.component.html', //surely we should be calling <login> on init? yes!
+  templateUrl: './loginComponent.component.html',
   styleUrls: ['./loginComponent.component.css']
 })
 export class loginComponent implements OnInit {
 
-  title = 'loginComponent';
 
   constructor() { }
 
