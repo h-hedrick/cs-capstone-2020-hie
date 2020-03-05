@@ -45,14 +45,7 @@ def init_model():
 	# hie = HighImpactExpierences(stu.su_id, 'SCOPE', 'CSC200')
 	# hie.location_id = 
 
-	testRace = Races()
-	testRace.createNewRace(first_race="vulcan", second_race="human")
-	testRace.saveToDB()
-
-	# testDemo = Demographics()
-
-
-	# testStudent = Students(12345)
+	Students.createStudent(9876, "M", "White", None, True, False, -1, -1)
 
 ###########################################
 # Database Table Model and Relationships  #
@@ -90,11 +83,34 @@ class Students(db.Model):
 
 	# ToString method
 	def __repr__(self):
-		return "[STUDENTS:SU_id=%d, Demographic=%d, HIE_Taken=%d, Enrollment_Status=%d]".format(
+		return "[STUDENTS:SU_id={}, Demographic={}, HIE_Taken={}, Enrollment_Status={}]".format(
 			self.su_id, self.demographic_id, self.hie_id, self.enrollment_id)
+	
+	@classmethod
+	def createStudent(cls, su_id, sex, firstRace, secondRace, pell, first_gen, hie_id, enrollment_id):
+		print("createStudent: Start")
+		newEntry = cls(su_id) # call default constructor
+		## Append Demographic Relationship ##
+		demoEntry = Demographics.searchForDemographic(su_id=su_id)
+		if demoEntry is None:
+			print("createStudent: demographic not found, creating new entry")
+			demoEntry = Demographics.createDemographic(pell=pell, sex=sex, first_race=firstRace, second_race=secondRace, first_gen=first_gen)
+		else:
+			print("createStudent: demographic found, using exisiting entry")
+		newEntry.demographic_id.append(demoEntry)
+		## End Demographic ##
 
-	# @classmethod
-	# def createNewStudent(cls, su_id, demographic_id, hie_id, enrollment_id)
+		## Append High Impact Experience Relationship ##
+		# newEntry.hie_id = None
+		## End HIE ##
+
+		## Append Enrollment Relationship ##
+		# newEntry.enrollment_id = None
+		## End Enrollment ##
+
+		newEntry.saveToDB()
+		print("createStudent: student entry added to table")
+		return newEntry
 
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
@@ -182,7 +198,7 @@ class Locations(db.Model):
 		db.session.add(self)
 		db.session.commit()
 
-class Demographics(db.Model):
+class Demographics(db.Model): 
 	__tablename__ = "demographics"
 	demographic_id = db.Column(db.Integer, primary_key=True)
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
@@ -192,56 +208,79 @@ class Demographics(db.Model):
 	first_gen_flag = db.Column(db.Boolean, nullable=False)
 
 	def __init__(self, **kwargs):
+		print("Demographics init: creating new entry")
 		for key, value in kwargs.items():
-			if key == "su_id":
-				self.su_id = value
+			# if key == "su_id":
+			# 	self.su_id = value
 			if key == "pell":
 				self.pell_flag = value
 			if key == "sex":
 				self.sex = value
 			if key == "first_gen":
 				self.first_gen_flag = value
-			if key == "first_race":
-				race = Races.searchForRace(kwargs.get("first_race"), kwargs.get("second_race"))
-				if race is None
-					newRace = None
-					if "second_race" in kwargs:
-						newRace = Races(su_id=self.su_id, first_race=kwargs.get("first_race"), second_race=kwargs.get("second_race"))
-					else:
-						newRace = Races(su_id=self.su_id, first_race=kwargs.get("first_race"), second_race=None)
-					newRace.saveToDB()
-					self.race_id = newRace.race_id
+		# if "race_id" in kwargs:
+		# 	self.race_id = kwargs.get("race_id")
+		# else:
+		# 	self.race_id = None
+		print("Demographics init: finished creating new entry")
+
+	@classmethod
+	def createDemographic(cls, **kwargs):
+		print("createDemographic: creating new entry in demographics.")
+		newEntry = cls(pell=kwargs.get("pell"), sex=kwargs.get("sex"), first_gen=kwargs.get("first_gen")) #call default constructor
+		if "first_race" in kwargs:
+			race = Races.searchForRace(first_race=kwargs.get("first_race"), second_race=kwargs.get("second_race"))
+			if race is None:
+				print("createDemographic: Race not found, creating new entry in Race")
+				race = Races.createRace(first_race=kwargs.get("first_race"), second_race=kwargs.get("second_race"))
+			else:
+				print("createDemographic: race found, using existing entry")
+			newEntry.race_id.append(race)
+			newEntry.saveToDB()
+		print("createDemographic: demographic entry added to table")
+		return newEntry
 
 	# ToString method
 	def __repr__(self):
-		return "[DEMOGRAPHIC:id=%d, SU_ID=%d, Sex=%s, Race=%d, Pell_Grant?=%b, First_Gen?=%b]".format(
+		return "[DEMOGRAPHIC:id={}, SU_ID={}, Sex={}, Race={}, Pell_Grant?={}, First_Gen?={}]".format(
 			self.demographic_id, self.su_id, self.sex, self.race_id, self.pell_flag, self.first_gen_flag)
 
 	@classmethod
 	def searchForDemographic(cls, **kwargs):
 		if "su_id" in kwargs:
-			result = cls.searchForDemographicByID(kwargs.get("su_id"))
+			result = cls.searchForDemographicBySUID(kwargs.get("su_id"))
 			if result is not None:
 				return result
-		if "pell_flag" in kwargs:
-			result = cls.searchForDemographicByPell(kwargs.get("pell_flag"))
-			if result is not None:
-				return result
-		if "first_gen" in kwargs:
-			result = cls.searchForDemographicByFG(kwargs.get("first_gen"))
-			if result is not None:
-				return result
-		if "sex" in kwargs:
-			result = cls.searchForDemographicBySex(kwargs.get("sex"))
-			if result is not None:
-				return result
-		if "race_id" in kwargs:
-			result = cls.searchForDemographicByRaceID(kwargs.get("race_id"))
-			if result is not None:
-				return result
+		# if "pell_flag" in kwargs:
+		# 	result = cls.searchForDemographicByPell(kwargs.get("pell_flag"))
+		# 	if result is not None:
+		# 		return result
+		# if "first_gen" in kwargs:
+		# 	result = cls.searchForDemographicByFG(kwargs.get("first_gen"))
+		# 	if result is not None:
+		# 		return result
+		# if "sex" in kwargs:
+		# 	result = cls.searchForDemographicBySex(kwargs.get("sex"))
+		# 	if result is not None:
+		# 		return result
+		# if "race_id" in kwargs:
+		# 	result = cls.searchForDemographicByRaceID(kwargs.get("race_id"))
+		# 	if result is not None:
+		# 		return result
 		print("searchDemographic reached default endpoint, returns NONE")
 		return None
 
+	@classmethod
+	def searchForDemographicBySUID(cls, id):
+		return db.session.query(cls).filter(cls.su_id == id).first()
+
+	# @classmethod
+	# def searchForDemographicByPell(cls, pell):
+	# 	return db.session.query(cls).filter(cls.pell_flag == pell)
+
+	# @classmethod
+	# def searchForDemographicByRaceID(cls, id):
+	# 	return db.session.query(cls).filter(cls.race_id == id)
 
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
@@ -251,14 +290,12 @@ class Demographics(db.Model):
 class Races(db.Model):
 	__tablename__ = "races"
 	race_id = db.Column(db.Integer, primary_key=True)
-	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
+	demographic_id = db.Column(db.Integer, db.ForeignKey('demographics.demographic_id'))
 	first_race = db.Column(db.String(20), nullable=False)
 	second_race = db.Column(db.String(20))
 
 	def __init__(self, **kwargs):
 		for key, value in kwargs.items():
-			if key == "su_id":
-				self.su_id = value
 			if key == "first_race":
 				self.first_race = value
 			if key == "second_race":
@@ -266,27 +303,32 @@ class Races(db.Model):
 
 	# ToString method
 	def __repr__(self):
-		return "[RACE:id=%d, SU_ID=%d, Race1=%s, Race2=%s]".format(
-			self.race_id, self.su_id, self.first_race, self.second_race)
+		return "[RACE:id={}, DEMO_ID={}, Race1={}, Race2={}]".format(
+			self.race_id, self.demographic_id, self.first_race, self.second_race)
+
+	@classmethod
+	def createRace(cls, **kwargs):
+		print("createRace: creating new entry in Races.")
+		newEntry = cls(first_race=kwargs.get("first_race"), second_race=kwargs.get("second_race")) #call default constructor
+		newEntry.saveToDB()
+		print("createRace: new race added to table")
+		return newEntry
 
 	@classmethod
 	def searchForRace(cls, **kwargs):
-		if "su_id" in kwargs:
-			result = cls.searchForRaceByID(kwargs.get("su_id"))
+		if "demographic_id" in kwargs:
+			result = cls.searchForRaceBySUID(kwargs.get("demographic_id"))
 			if result is not None:
 				return result
 		if "first_race" in kwargs:
-			if "second_race" in kwargs:
-				result = cls.searchForRaceByRace(kwargs.get("first_race"), kwargs.get("second_race"))
-			else:
-				result = cls.searchForRaceByRace(kwargs.get("first_race"), None)
+			result = cls.searchForRaceByRace(kwargs.get("first_race"), kwargs.get("second_race"))
 			return result
 		print("searchRace reached default endpoint, returns NONE")
 		return None
 
 	@classmethod
-	def searchForRaceByID(cls, id):
-		return db.session.query(cls).filter(cls.su_id == id).first()
+	def searchForRaceByDemoID(cls, id):
+		return db.session.query(cls).filter(cls.demographic_id == id).first()
 
 	@classmethod
 	def searchForRaceByRace(cls, first_race, second_race):
