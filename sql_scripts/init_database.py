@@ -133,11 +133,18 @@ class Terms(db.Model):
 	year = db.Column(db.Integer, nullable=False)
 
 
-	def __init__(self, term, year):
+	def __init__(self, **kwargs):
 		'''Constructor. Handles entry creation for the table object. All values passed are
 			by this method.'''
-		self.term = term.upper()
-		self.year = year
+		for key, value in kwargs.items():
+			if key == "term":
+				self.term = value
+			if key == "year":
+				self.year = value
+
+	@classmethod
+	def searchForTerms(cls, **kwargs):
+		
 
 	# ToString Method
 	def __repr__(self):
@@ -194,54 +201,27 @@ class Demographics(db.Model):
 	def __init__(self, **kwargs):
 		for key, value in kwargs.items():
 			if key == "su_id":
-				self.su_id = value
+				self.su_id = su_id
 			if key == "pell":
-				self.pell_flag = value
+				self.pell_flag = pell
 			if key == "sex":
-				self.sex = value
+				self.sex = sex
 			if key == "first_gen":
-				self.first_gen_flag = value
+				self.first_gen_flag = first_gen
 			if key == "first_race":
-				race = Races.searchForRace(kwargs.get("first_race"), kwargs.get("second_race"))
-				if race is None
-					newRace = None
-					if "second_race" in kwargs:
-						newRace = Races(su_id=self.su_id, first_race=kwargs.get("first_race"), second_race=kwargs.get("second_race"))
-					else:
-						newRace = Races(su_id=self.su_id, first_race=kwargs.get("first_race"), second_race=None)
-					newRace.saveToDB()
-					self.race_id = newRace.race_id
+				self.race_id = getRace(kwargs.get("first_race"), kwargs.get("second_race"))
 
 	# ToString method
 	def __repr__(self):
 		return "[DEMOGRAPHIC:id=%d, SU_ID=%d, Sex=%s, Race=%d, Pell_Grant?=%b, First_Gen?=%b]".format(
 			self.demographic_id, self.su_id, self.sex, self.race_id, self.pell_flag, self.first_gen_flag)
 
-	@classmethod
-	def searchForDemographic(cls, **kwargs):
-		if "su_id" in kwargs:
-			result = cls.searchForDemographicByID(kwargs.get("su_id"))
-			if result is not None:
-				return result
-		if "pell_flag" in kwargs:
-			result = cls.searchForDemographicByPell(kwargs.get("pell_flag"))
-			if result is not None:
-				return result
-		if "first_gen" in kwargs:
-			result = cls.searchForDemographicByFG(kwargs.get("first_gen"))
-			if result is not None:
-				return result
-		if "sex" in kwargs:
-			result = cls.searchForDemographicBySex(kwargs.get("sex"))
-			if result is not None:
-				return result
-		if "race_id" in kwargs:
-			result = cls.searchForDemographicByRaceID(kwargs.get("race_id"))
-			if result is not None:
-				return result
-		print("searchDemographic reached default endpoint, returns NONE")
-		return None
-
+	def getRace(self, first_race, second_race):
+		raceProfile = Races.query.filter((Races.first_race == first_race) | (Races.second_race == second_race)).first()
+		if raceProfile is None:
+			# if none, create new entry in the Races table
+			raceProfile = Races(self.demographic_id, first_race, second_race)
+		return raceProfile.race_id
 
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
@@ -251,47 +231,24 @@ class Demographics(db.Model):
 class Races(db.Model):
 	__tablename__ = "races"
 	race_id = db.Column(db.Integer, primary_key=True)
-	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
+	demographic_id = db.Column(db.Integer, db.ForeignKey('demographics.demographic_id'))
 	first_race = db.Column(db.String(20), nullable=False)
 	second_race = db.Column(db.String(20))
 
 	def __init__(self, **kwargs):
-		for key, value in kwargs.items():
-			if key == "su_id":
-				self.su_id = value
-			if key == "first_race":
-				self.first_race = value
-			if key == "second_race":
-				self.second_race = value
+		if #working on recursive population, check on demo for race in init. possible?
+		if "first_race" in kwargs:
+			if "second_race" in kwargs:
+				self.searchRaces(kwargs.get("first_race"), kwargs.get("second_race"))
+			else:
+				self.searchRaces(kwargs.get("first_race"), None)
 
 	# ToString method
 	def __repr__(self):
-		return "[RACE:id=%d, SU_ID=%d, Race1=%s, Race2=%s]".format(
-			self.race_id, self.su_id, self.first_race, self.second_race)
+		return "[RACE:id=%d, demographic_id=%d, Race1=%s, Race2=%s]".format(
+			self.race_id, self.demographic_id, self.first_race, self.second_race)
 
 	@classmethod
-	def searchForRace(cls, **kwargs):
-		if "su_id" in kwargs:
-			result = cls.searchForRaceByID(kwargs.get("su_id"))
-			if result is not None:
-				return result
-		if "first_race" in kwargs:
-			if "second_race" in kwargs:
-				result = cls.searchForRaceByRace(kwargs.get("first_race"), kwargs.get("second_race"))
-			else:
-				result = cls.searchForRaceByRace(kwargs.get("first_race"), None)
-			return result
-		print("searchRace reached default endpoint, returns NONE")
-		return None
-
-	@classmethod
-	def searchForRaceByID(cls, id):
-		return db.session.query(cls).filter(cls.su_id == id).first()
-
-	@classmethod
-	def searchForRaceByRace(cls, first_race, second_race):
-		return db.session.query(cls).filter((cls.first_race == first_race) | (cls.second_race == second_race)).first()
-
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
 		db.session.add(self)
@@ -306,8 +263,16 @@ class Enrollments(db.Model):
 	graduation_id = db.relationship("GraduationClasses", backref='enrollments.graduation_id', lazy=True)
 	# loa_id = db.relationship("LeaveOfAbsences", backref='enrollments.loa_id', lazy=True)
 
-	def __init__(self, su_id):
-		self.su_id = su_id
+	def __init__(self, **kwargs):
+		for key, value in kwargs.items():
+			if key == "su_id":
+				self.su_id = su_id()
+			if key == "fys_aes_term":
+				self.fys_aes_term = fys_aes_term()
+			if key == "fys_flag":
+				self.fys_flag = fys_flag
+			if key == "graduation_id":
+				self.graduation_id = graduation_id()
 
 	# ToString method
 	def __repr__(self):
@@ -327,8 +292,14 @@ class GraduationClasses(db.Model):
 	graduation_term = db.relationship("Terms", secondary=termToGrad, backref='termToGrad.term_id', lazy=True)
 	graduated = db.Column(db.Boolean)
 
-	def __init__(self, su_id):
-		self.su_id = su_id
+	def __init__(self, **kwargs):
+		for key, value in kwargs.items():
+			if key == "enrollment_id":
+				self.enrollment_id = value
+			if key == "graduation_term":
+				self.graduation_term = value
+			if key == "graduated":
+				self.graduated = value
 
 	# ToString method
 	def __repr__(self):
