@@ -10,8 +10,12 @@ import { BodyComponent } from './body/body.component';
 import { FilterBoxComponent } from './filter-box/filter-box.component';
 import { DataBasicComponent } from './data-basic/data-basic.component';
 import { DataVisComponent } from './data-vis/data-vis.component';
+import { fakeBackendProvider,JwtInterceptor,ErrorInterceptor } from './_helpers'; 
 
-@NgModule({
+import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+
+@NgModule({ 
   declarations: [
     AppComponent,
     loginComponent,
@@ -22,9 +26,19 @@ import { DataVisComponent } from './data-vis/data-vis.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    ReactiveFormsModule,
+    HttpClientModule
   ],
-  providers: [],
-  bootstrap: [AppComponent]
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+
+    fakeBackendProvider
+
+  ],
+  bootstrap: [
+    AppComponent
+  ]
 })
 export class AppModule { }

@@ -32,12 +32,13 @@ module.exports = {
             }
         ]
     },
+    //!!! THIS IS THE IMPORTANT PART !!!
     plugins: [
         new HtmlWebpackPlugin({ template: './src/index.html' }),
         new webpack.DefinePlugin({
-            // global app config object
+            // !!! global app config object !!!
             config: JSON.stringify({
-                apiUrl: 'http://localhost:4000'
+                apiUrl: 'http://localhost:4000' //soon: connect with real api
             })
         }),
 
