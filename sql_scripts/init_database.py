@@ -101,12 +101,15 @@ class Students(db.Model):
 		entries in child tables, Demographics and Races.
 
 		Parameters:
-		su_id (int) -- Unique student ID number
-		sex (char) -- Biological sex ('M' or 'F')
-		pell (bool) -- Flag indicating if entry received Pell Grant
-		first_gen (bool) -- Flag indicating if entry is a first generation college student
-		first_race (str) -- first race of entry (default None)
-		second_race (str) -- second race of entry (default None)
+		Basic:
+			su_id (int) -- Unique student ID number
+		Demographic Data:
+			sex (char) -- Biological sex ('M' or 'F')
+			pell (bool) -- Flag indicating if entry received Pell Grant
+			first_gen (bool) -- Flag indicating if entry is a first generation college student
+		Race Data:
+			first_race (str) -- first race of entry (default None)
+			second_race (str) -- second race of entry (default None)
 		"""
 		print("createStudent: Start")
 		newEntry = cls(su_id) # call default constructor
@@ -140,24 +143,75 @@ class Students(db.Model):
 		db.session.add(self)
 		db.session.commit()
 
-
 class HighImpactExpierences(db.Model):
 	__tablename__ = "high_impact_expierences"
 	hie_id = db.Column(db.Integer, primary_key=True)
 	su_id = db.Column(db.Integer, db.ForeignKey('students.su_id'))
 	hie_type = db.Column(db.String(50), nullable=False)
+	hie_name = db.Column(db.String(50))
 	hie_course_number = db.Column(db.String(50))
 	location_id = db.relationship("Locations", backref='high_impact_expierences.location_id', lazy=True)
-	term_id = db.relationship("Terms", secondary=termToHIE, backref='termToHIE.term_id', lazy=True)
+	term_id = db.relationship("Terms", secondary=termToHIE, backref='termToHIE.term_id', lazy='dynamic')
 
-	def __init__(self, su_id, hie_type, hie_course_number):
-		self.su_id = su_id
+	def __init__(self, hie_type, hie_name, hie_course_number):
+		self.hie_name = hie_name
 		self.hie_type = hie_type
 		self.hie_course_number = hie_course_number
 
+	@classmethod
+	def createHIE(cls, hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, term, year)
+		print("createHIE: Start")
+		newEntry = cls(hie_type, hie_name, hie_course_number) # call default constructor
+
+		## Append Location Relationship ##
+		locEntry = Locations.searchForLocation(hie_id=newEntry.hie_id)
+		if locEntry is None:
+			print("createHIE: location not found, creating new entry")
+			locEntry = Locations.createLocation(london_flag, dc_flag, city_name, country_name)
+		else:
+			print("createHIE: location found, using exisiting entry")
+		newEntry.location_id.append(locEntry)
+		## End Location ##
+
+		## Append Term Relationship ##
+		termEntry = Terms.searchForTerm(term=term, year=year)
+		if termEntry is None:
+			print("createHIE: term not found, creating new entry")
+			termEntry = Terms.createTerm(term, year)
+		else:
+			print("createHIE: term found, using existing entry")
+		newEntry.term_id.append(termEntry)
+		## End Term ##
+
+		newEntry.saveToDB()
+		print("createHIE: HIE entry added to table")
+		return newEntry
+
+	@classmethod
+	def searchForHIE(cls, **kwargs):
+		if "su_id" in kwargs:
+			result = searchForHIEBySUID(kwargs.get("su_id"))
+			if result is not None:
+				return result
+		if "hie_course_number" in kwargs:
+			result = searchForHIEByCourseNumber(kwargs.get("hie_course_number"))
+			if result is not None:
+				return result
+		#type, name, by location, by term here
+		print("searchForHIE: default endpoint reached, return NONE")
+		return None
+
+	@classmethod
+	def searchForHIEBySUID(cls, su_id):
+		return db.session.query(cls).filter(cls.su_id==su_id).first()
+
+	@classmethod
+	def searchForHIEByCourseNumber(cls, course_number):
+		return db.session.query(cls).filter(cls.hie_course_number==course_number).first()
+
 	# ToString method
 	def __repr__(self):
-		return "[HIE:id=%d, SU_ID=%d, Type=%s, Course_Num=%s, Location=%d, Term=%d]".format(
+		return "[HIE:id={}, SU_ID={}, Type={}, Course_Num={}, Location={}, Term={}]".format(
 			self.hie_id, self.su_id, self.hie_type, self.hie_course_number, self.location_id, self.term_id)
 		
 	def saveToDB(self):
@@ -170,7 +224,6 @@ class Terms(db.Model):
 	term_id = db.Column(db.Integer, primary_key=True)
 	term = db.Column(db.String(6))
 	year = db.Column(db.Integer, nullable=False)
-
 
 	def __init__(self, term, year):
 		'''Constructor. Handles entry creation for the table object. All values passed are
@@ -206,14 +259,67 @@ class Locations(db.Model):
 	london_flag = db.Column(db.Boolean)
 	dc_flag = db.Column(db.Boolean)
 
-	def __init__(self, hie_id, london_flag, dc_flag):
-		self.hie_id = hie_id
+	def __init__(self, london_flag, dc_flag):
 		self.london_flag = london_flag
 		self.dc_flag = dc_flag
 
+	@classmethod
+	def createLocation(cls, london_flag, dc_flag, city_name, country_name):
+		print("createLocation: creating new location entry")
+		newEntry = cls(london_flag, dc_flag) # call default contructor
+
+		## Append city entry relationship ##
+		city = Cities.searchForCity(loc_id=newEntry.loc_id, name=city_name)
+		if city is None:
+			print("createLocation: city not found, creating new entry")
+			city = Cities.createCity(city_name)
+		else:
+			print("createLocation: city found, using existing entry")
+		newEntry.city_id.append(city)
+		## END append city ##
+
+		## Append country entry relationship ##
+		country = Country.searchForCountry(loc_id=newEntry.loc_id, name=country_name)
+		if country is None:
+			print("createLocation: country not found, creating new entry")
+			country = Countries.createCountry(country_name)
+		else:
+			print("createLocation: country found, using existing entry")
+		newEntry.country_id.append(country)
+		## END append country ##
+
+		newEntry.saveToDB()
+		print("createLocation: success, new entry added")
+		return newEntry
+
+	@classmethod
+	def searchForLocation(cls, **kwargs):
+		if "loc_id" in kwargs:
+			result = searchForLocationByID(kwargs.get("loc_id"))
+			if result is not None:
+				return result
+		if "city" in kwargs or "country" in kwargs:
+			result = searchForLocationByCityCountry(kwargs.get("city"), kwargs.get("country"))
+			if result is not None:
+				return result
+		print("searchForLocation: default enpoint reached, returns NONE")
+		return None
+
+	@classmethod
+	def searchForLocationByHIEID(hie_id):
+		return db.session.query(cls).filter(cls.hie_id == hie_id).first()
+
+	@classmethod
+	def searchForLocationByCityCountry(city, country):
+		city = db.session.query(Cities).filter(Cities.name == city).first()
+		if city is None:
+			country = db.session.query(Countries).filter(Countries.name == country).first()
+			return country
+		return None
+
 	# ToString method
 	def __repr__(self):
-		return "[LOCATION:id=%d, HIE_ID=%d, City=%d, Country=%d, London?=%b, DC?=%b]".format(
+		return "[LOCATION:id={}, HIE_ID={}, City={}, Country={}, London?={}, DC?={}]".format(
 			self.location_id, self.hie_id, self.city_id, self.country_id, self.london_flag, self.dc_flag)
 		
 	def saveToDB(self):
@@ -257,7 +363,6 @@ class Demographics(db.Model):
 		"""
 		print("createDemographic: creating new entry in demographics.")
 		newEntry = cls(sex, pell, first_gen) #call default constructor
-		# if "first_race" in kwargs:
 		race = Races.searchForRace(first_race=first_race, second_race=second_race)
 		if race is None:
 			print("createDemographic: Race not found, creating new entry in Race")
@@ -410,7 +515,7 @@ class Enrollments(db.Model):
 
 	# ToString method
 	def __repr__(self):
-		return "[ENROLLMENT:id=%d, SU_ID=%d, FYS_Term=%d, AES_Term=%d, Grad_ID=%d]".format(
+		return "[ENROLLMENT:id={}, SU_ID={}, FYS_Term={}, AES_Term={}, Grad_ID={}]".format(
 			self.enrollment_id, self.su_id, self.fys_term, self.aes_term, self.graduation_id)
 		
 	def saveToDB(self):
@@ -431,7 +536,7 @@ class GraduationClasses(db.Model):
 
 	# ToString method
 	def __repr__(self):
-		return "[GRAD_CLASS:id=%d, SU_ID=%d, ExpGrad=%d, ActGrad=%d]".format(
+		return "[GRAD_CLASS:id={}, SU_ID={}, ExpGrad={}, ActGrad={}]".format(
 			self.graduation_id, self.su_id, self.expected_term, self.actual_term)
 		
 	def saveToDB(self):
@@ -468,13 +573,40 @@ class Cities(db.Model):
 	loc_id = db.Column(db.Integer, db.ForeignKey('locations.location_id'))
 	name = db.Column(db.Text, nullable=False)
 
-	def __init__(self, name, country_id):
+	def __init__(self, name):
 		self.name = name
-		self.country_id # = get query?
 	
+	@classmethod
+	def createCity(cls, name):
+		print("createCity: creating new entry")
+		newEntry = cls(name)
+		newEntry.saveToDB()
+		print("createCity: created new entry successfully")
+		return newEntry
+
+	@classmethod
+	def searchForCity(cls, **kwargs):
+		if "loc_id" in kwargs:
+			result = searchForCityByLOCID(kwargs.get("loc_id"))
+			if result is not None:
+				return result
+		if "name" in kwargs:
+			result = searchForCityByName(kwargs.get("name"))
+			return result
+		print("searchForCity: Default endpoint reached, returns NONE")
+		return None
+
+	@classmethod
+	def searchForCityByLOCID(cls, loc_id):
+		return db.session.query(cls).filter(cls.loc_id == loc_id).first()
+
+	@classmethod
+	def searchForCityByName(cls, name):
+		return db.session.query(cls).filter(cls.name == name).first()
+
 	# ToString method
 	def __repr__(self):
-		return "[City:id=%d, Name=%s, Country=%d]".format(self.id, self.name, self.country_id)
+		return "[City:id={}, Name={}, Country={}]".format(self.id, self.name, self.country_id)
 
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
@@ -490,9 +622,37 @@ class Countries(db.Model):
 	def __init__(self, name):
 		self.name = name
 	
+	@classmethod
+	def createCountry(cls, name):
+		print("createCountry: creating new entry")
+		newEntry = cls(name)
+		newEntry.saveToDB()
+		print("createCountry: created new entry successfully")
+		return newEntry
+
+	@classmethod
+	def searchForCountry(cls, **kwargs):
+		if "loc_id" in kwargs:
+			result = searchForCountryByLOCID(kwargs.get("loc_id"))
+			if result is not None:
+				return result
+		if "name" in kwargs:
+			result = searchForCountryByName(kwargs.get("name"))
+			return result
+		print("searchForCountry: Default endpoint reached, returns NONE")
+		return None
+
+	@classmethod
+	def searchForCountryByLOCID(cls, loc_id):
+		return db.session.query(cls).filter(cls.loc_id == loc_id).first()
+
+	@classmethod
+	def searchForCountryByName(cls, name):
+		return db.session.query(cls).filter(cls.name == name).first()
+
 	# ToString method
 	def __repr__(self):
-		return "[COUNTRIES:id=%d, name=%s]".format(self.country_id, self.name)
+		return "[COUNTRIES:id={}, name={}]".format(self.country_id, self.name)
 		
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
