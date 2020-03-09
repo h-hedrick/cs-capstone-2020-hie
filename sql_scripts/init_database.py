@@ -45,7 +45,7 @@ def init_model():
 	# hie = HighImpactExpierences(stu.su_id, 'SCOPE', 'CSC200')
 	# hie.location_id = 
 
-	Students.createStudent(9876, "M", True, False, "White", None, "SCOPE", "AI with Schrum", "010101", False, False, "Georgetown", "USA", "Summer", 1984, -1)
+	Students.createStudent(9876, "M", False, False, "White", None, "SCOPE", "DGLOS", "-1", False, False, "Georgetown", "USA", "Summer", 2017, True, "fall", 2016, False, "spring", 2020)
 
 ###########################################
 # Database Table Model and Relationships  #
@@ -97,8 +97,8 @@ class Students(db.Model):
 	
 	@classmethod
 	def createStudent(cls, su_id, sex, pell_flag, first_gen_flag, first_race, second_race, 
-		hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, term, year, 
-		enrollment_id):
+		hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, hie_term, hie_year, 
+		fys_flag, fys_aes_term, fys_aes_year, graduated, grad_term, grad_year):
 		"""Create a new entry in the Students table and returns the new instance. Extra attributes used for search/finding
 		entries in child tables, Demographics and Races.
 
@@ -130,18 +130,24 @@ class Students(db.Model):
 		hieEntry = HighImpactExpierences.searchForHIE(su_id=su_id)
 		if hieEntry is None:
 			print("createStudent: no HIE entry found, creating new entry")
-			hieEntry = HighImpactExpierences.createHIE(hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, term, year)
+			hieEntry = HighImpactExpierences.createHIE(hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, hie_term, hie_year)
 		else:
 			print("createStudent: HIE entry found, using existing entry")
 		newEntry.hie_id.append(hieEntry)
 		## End HIE ##
 
 		## Append Enrollment Relationship ##
-		# newEntry.enrollment_id = None
+		enrollEntry = Enrollments.searchForEnrollment(su_id=su_id)
+		if enrollEntry is None:
+			print("createStudent: no Enrollment found, creating new entry")
+			enrollEntry = Enrollments.createEnrollment(fys_flag, fys_aes_term, fys_aes_year, graduated, grad_term, grad_year)
+		else:
+			print("createStudent: enrollment entry found, using existing entry")
+		newEntry.enrollment_id.append(enrollEntry)
 		## End Enrollment ##
 
 		newEntry.saveToDB()
-		print("createStudent: student entry added to table")
+		print("createStudent: Success! Student entry added to table")
 		return newEntry
 
 	#TODO: makes searches
@@ -167,7 +173,7 @@ class HighImpactExpierences(db.Model):
 		self.hie_course_number = hie_course_number
 
 	@classmethod
-	def createHIE(cls, hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, term, year):
+	def createHIE(cls, hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, hie_term, hie_year):
 		print("createHIE: Start")
 		newEntry = cls(hie_type, hie_name, hie_course_number) # call default constructor
 
@@ -182,10 +188,10 @@ class HighImpactExpierences(db.Model):
 		## End Location ##
 
 		## Append Term Relationship ##
-		termEntry = Terms.searchForTerm(term=term, year=year)
+		termEntry = Terms.searchForTerm(term=hie_term, year=hie_year)
 		if termEntry is None:
 			print("createHIE: term not found, creating new entry")
-			termEntry = Terms.createTerm(term, year)
+			termEntry = Terms.createTerm(hie_term, hie_year)
 		else:
 			print("createHIE: term found, using existing entry")
 		newEntry.term_id.append(termEntry)
@@ -233,23 +239,23 @@ class Terms(db.Model):
 	term = db.Column(db.String(6))
 	year = db.Column(db.Integer, nullable=False)
 
-<<<<<<< HEAD
-
-	def __init__(self, **kwargs):
-=======
 	def __init__(self, term, year):
->>>>>>> 834e2561f26dbc81c143c51ed0d8b4c13bcd63f1
 		'''Constructor. Handles entry creation for the table object. All values passed are
 			by this method.'''
-		for key, value in kwargs.items():
-			if key == "term":
-				self.term = value
-			if key == "year":
-				self.year = value
+		self.term = term
+		self.year = year
 
 	@classmethod
-	def searchForTerms(cls, **kwargs):
-		
+	def createTerm(cls, term, year):
+		print("createTerm: creating new term entry")
+		newEntry = cls(term, year) # call default contructor
+		newEntry.saveToDB()
+		print("createTerm: success, new entry added")
+		return newEntry
+
+	@classmethod
+	def searchForTerm(cls, term, year):
+		return db.session.query(cls).filter(cls.term == term).filter(cls.year == year).first()
 
 	# ToString Method
 	def __repr__(self):
@@ -259,16 +265,6 @@ class Terms(db.Model):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
 		db.session.add(self)
 		db.session.commit()
-
-	### Methods for the table to enable search functions for queries. Individual query per type of search. ###
-	# @classmethod
-	# def searchTerms(cls, term):
-	# 	id = db.session.query(cls).filter(cls.term == term)
-	# 	# if id is NONE:
-	# 	# 	# create new term if none exists
-	# 	# else:
-	# 		# print(type(id))
-	# 	return id
 
 class Locations(db.Model):
 	__tablename__ = "locations"
@@ -364,20 +360,6 @@ class Demographics(db.Model):
 	race_id = db.relationship("Races", backref='demographics.race_id', lazy=True)
 	first_gen_flag = db.Column(db.Boolean, nullable=False)
 
-<<<<<<< HEAD
-	def __init__(self, **kwargs):
-		for key, value in kwargs.items():
-			if key == "su_id":
-				self.su_id = su_id
-			if key == "pell":
-				self.pell_flag = pell
-			if key == "sex":
-				self.sex = sex
-			if key == "first_gen":
-				self.first_gen_flag = first_gen
-			if key == "first_race":
-				self.race_id = getRace(kwargs.get("first_race"), kwargs.get("second_race"))
-=======
 	def __init__(self, sex, pell_flag, first_year_flag):
 		self.pell_flag = pell_flag
 		self.sex = sex
@@ -407,21 +389,12 @@ class Demographics(db.Model):
 		newEntry.saveToDB()
 		print("createDemographic: demographic entry added to table")
 		return newEntry
->>>>>>> 834e2561f26dbc81c143c51ed0d8b4c13bcd63f1
 
 	# ToString method
 	def __repr__(self):
 		return "[DEMOGRAPHIC:id={}, SU_ID={}, Sex={}, Race={}, Pell_Grant?={}, First_Gen?={}]".format(
 			self.demographic_id, self.su_id, self.sex, self.race_id, self.pell_flag, self.first_gen_flag)
 
-<<<<<<< HEAD
-	def getRace(self, first_race, second_race):
-		raceProfile = Races.query.filter((Races.first_race == first_race) | (Races.second_race == second_race)).first()
-		if raceProfile is None:
-			# if none, create new entry in the Races table
-			raceProfile = Races(self.demographic_id, first_race, second_race)
-		return raceProfile.race_id
-=======
 	@classmethod
 	def searchForDemographic(cls, **kwargs):
 		"""Search through Demographics table based on the passed column attributes.
@@ -465,7 +438,6 @@ class Demographics(db.Model):
 	# @classmethod
 	# def searchForDemographicByRaceID(cls, id):
 	# 	return db.session.query(cls).filter(cls.race_id == id)
->>>>>>> 834e2561f26dbc81c143c51ed0d8b4c13bcd63f1
 
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
@@ -488,22 +460,6 @@ class Races(db.Model):
 	first_race = db.Column(db.String(20), nullable=False)
 	second_race = db.Column(db.String(20))
 
-<<<<<<< HEAD
-	def __init__(self, **kwargs):
-		if #working on recursive population, check on demo for race in init. possible?
-		if "first_race" in kwargs:
-			if "second_race" in kwargs:
-				self.searchRaces(kwargs.get("first_race"), kwargs.get("second_race"))
-			else:
-				self.searchRaces(kwargs.get("first_race"), None)
-
-	# ToString method
-	def __repr__(self):
-		return "[RACE:id=%d, demographic_id=%d, Race1=%s, Race2=%s]".format(
-			self.race_id, self.demographic_id, self.first_race, self.second_race)
-
-	@classmethod
-=======
 	def __init__(self, first_race, second_race):
 		self.first_race = first_race
 		self.second_race = second_race
@@ -556,7 +512,6 @@ class Races(db.Model):
 		"""Returns first match by racial descriptions"""
 		return db.session.query(cls).filter((cls.first_race == first_race) | (cls.second_race == second_race)).first()
 
->>>>>>> 834e2561f26dbc81c143c51ed0d8b4c13bcd63f1
 	def saveToDB(self):
 		'''Quicksave method. Automatically commits and saves entry to db.'''
 		db.session.add(self)
@@ -571,16 +526,47 @@ class Enrollments(db.Model):
 	graduation_id = db.relationship("GraduationClasses", backref='enrollments.graduation_id', lazy=True)
 	# loa_id = db.relationship("LeaveOfAbsences", backref='enrollments.loa_id', lazy=True)
 
-	def __init__(self, **kwargs):
-		for key, value in kwargs.items():
-			if key == "su_id":
-				self.su_id = su_id()
-			if key == "fys_aes_term":
-				self.fys_aes_term = fys_aes_term()
-			if key == "fys_flag":
-				self.fys_flag = fys_flag
-			if key == "graduation_id":
-				self.graduation_id = graduation_id()
+	def __init__(self, fys_flag):
+		self.fys_flag = fys_flag
+
+	@classmethod
+	def createEnrollment(cls, fys_flag, fys_aes_term, fys_aes_year, graduated, grad_term, grad_year):
+		print("createEnrollment: start")
+		newEntry = cls(fys_flag)
+
+		## Append FYS/AES Term relationship ##
+		fysTermEntry = Terms.searchForTerm(fys_aes_term, fys_aes_year)
+		if fysTermEntry is None:
+			print("createEnrollment: no matching term entry found, creating new entry")
+			fysTermEntry = Terms.createTerm(fys_aes_term, fys_aes_year)
+		else:
+			print("createEnrollment: Term found, using existing entry")
+		newEntry.fys_aes_term.append(fysTermEntry)
+		## END FYS/AES Relationship ##
+
+		## Append Graduation relationship ##
+		gradEntry = GraduationClasses.searchForGraduation(enrollment_id=newEntry.enrollment_id)
+		if gradEntry is None:
+			print("createEnrollment: no graduation class found, creating new entry")
+			gradEntry = GraduationClasses.createGraduation(graduated, grad_term, grad_year)
+		else:
+			print("createEnrollment: graduation found, using existing entry")
+		newEntry.graduation_id.append(gradEntry)
+		newEntry.saveToDB()
+		print("createEnrollment: success")
+		return newEntry
+
+	@classmethod
+	def searchForEnrollment(cls, **kwargs):
+		if "su_id" in kwargs:
+			return cls.searchForEnrollmentBySUID(kwargs.get("su_id"))
+		#TODO: add other searches
+		print("search default reached, returns NONE")
+		return None
+
+	@classmethod
+	def searchForEnrollmentBySUID(cls, id):
+		return db.session.query(cls).filter(cls.su_id == id).first()
 
 	# ToString method
 	def __repr__(self):
@@ -600,14 +586,37 @@ class GraduationClasses(db.Model):
 	graduation_term = db.relationship("Terms", secondary=termToGrad, backref='termToGrad.term_id', lazy=True)
 	graduated = db.Column(db.Boolean)
 
-	def __init__(self, **kwargs):
-		for key, value in kwargs.items():
-			if key == "enrollment_id":
-				self.enrollment_id = value
-			if key == "graduation_term":
-				self.graduation_term = value
-			if key == "graduated":
-				self.graduated = value
+	def __init__(self, graduated):
+		self.graduated = graduated
+
+	@classmethod
+	def createGraduation(cls, graduated, term, year):
+		print("createGraduation: start")
+		newEntry = cls(graduated)
+		termEntry = Terms.searchForTerm(term, year)
+		if termEntry is None:
+			print("createGraduation: no matching term entry found, creating new entry")
+			termEntry = Terms.createTerm(term, year)
+		else:
+			print("createGraducation: Term found, using existing entry")
+		newEntry.graduation_term.append(termEntry)
+		newEntry.saveToDB()
+		print("createGraduation: success")
+		return newEntry
+
+	@classmethod
+	def searchForGraduation(cls, **kwargs):
+		if "enrollment_id" in kwargs:
+			result = cls.searchForGraduationByEnrollmentID(kwargs.get("enrollment_id"))
+			if result is not None:
+				return result
+		#TODO:other searches here
+		print("searchForGraduation failed, return NONE")
+		return None
+
+	@classmethod
+	def searchForGraduationByEnrollmentID(cls, enrollment_id):
+		return db.session.query(cls).filter(cls.enrollment_id == enrollment_id).first()
 
 	# ToString method
 	def __repr__(self):
