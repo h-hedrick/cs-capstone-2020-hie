@@ -45,7 +45,7 @@ def init_model():
 	# hie = HighImpactExpierences(stu.su_id, 'SCOPE', 'CSC200')
 	# hie.location_id = 
 
-	Students.createStudent(9876, "M", True, False, "White", None, -1, -1)
+	Students.createStudent(9876, "M", True, False, "White", None, "SCOPE", "AI with Schrum", "010101", False, False, "Georgetown", "USA", "Summer", 1984, -1)
 
 ###########################################
 # Database Table Model and Relationships  #
@@ -96,7 +96,9 @@ class Students(db.Model):
 			self.su_id, self.demographic_id, self.hie_id, self.enrollment_id)
 	
 	@classmethod
-	def createStudent(cls, su_id, sex, pell_flag, first_gen_flag, first_race, second_race, hie_id, enrollment_id):
+	def createStudent(cls, su_id, sex, pell_flag, first_gen_flag, first_race, second_race, 
+		hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, term, year, 
+		enrollment_id):
 		"""Create a new entry in the Students table and returns the new instance. Extra attributes used for search/finding
 		entries in child tables, Demographics and Races.
 
@@ -125,7 +127,13 @@ class Students(db.Model):
 		## End Demographic ##
 
 		## Append High Impact Experience Relationship ##
-		# newEntry.hie_id = None
+		hieEntry = HighImpactExpierences.searchForHIE(su_id=su_id)
+		if hieEntry is None:
+			print("createStudent: no HIE entry found, creating new entry")
+			hieEntry = HighImpactExpierences.createHIE(hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, term, year)
+		else:
+			print("createStudent: HIE entry found, using existing entry")
+		newEntry.hie_id.append(hieEntry)
 		## End HIE ##
 
 		## Append Enrollment Relationship ##
@@ -159,7 +167,7 @@ class HighImpactExpierences(db.Model):
 		self.hie_course_number = hie_course_number
 
 	@classmethod
-	def createHIE(cls, hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, term, year)
+	def createHIE(cls, hie_type, hie_name, hie_course_number, london_flag, dc_flag, city_name, country_name, term, year):
 		print("createHIE: Start")
 		newEntry = cls(hie_type, hie_name, hie_course_number) # call default constructor
 
@@ -190,11 +198,11 @@ class HighImpactExpierences(db.Model):
 	@classmethod
 	def searchForHIE(cls, **kwargs):
 		if "su_id" in kwargs:
-			result = searchForHIEBySUID(kwargs.get("su_id"))
+			result = cls.searchForHIEBySUID(kwargs.get("su_id"))
 			if result is not None:
 				return result
 		if "hie_course_number" in kwargs:
-			result = searchForHIEByCourseNumber(kwargs.get("hie_course_number"))
+			result = cls.searchForHIEByCourseNumber(kwargs.get("hie_course_number"))
 			if result is not None:
 				return result
 		#type, name, by location, by term here
@@ -269,7 +277,7 @@ class Locations(db.Model):
 		newEntry = cls(london_flag, dc_flag) # call default contructor
 
 		## Append city entry relationship ##
-		city = Cities.searchForCity(loc_id=newEntry.loc_id, name=city_name)
+		city = Cities.searchForCity(loc_id=newEntry.location_id, name=city_name)
 		if city is None:
 			print("createLocation: city not found, creating new entry")
 			city = Cities.createCity(city_name)
@@ -279,7 +287,7 @@ class Locations(db.Model):
 		## END append city ##
 
 		## Append country entry relationship ##
-		country = Country.searchForCountry(loc_id=newEntry.loc_id, name=country_name)
+		country = Countries.searchForCountry(loc_id=newEntry.location_id, name=country_name)
 		if country is None:
 			print("createLocation: country not found, creating new entry")
 			country = Countries.createCountry(country_name)
@@ -294,23 +302,23 @@ class Locations(db.Model):
 
 	@classmethod
 	def searchForLocation(cls, **kwargs):
-		if "loc_id" in kwargs:
-			result = searchForLocationByID(kwargs.get("loc_id"))
+		if "hie_id" in kwargs:
+			result = cls.searchForLocationByHIEID(kwargs.get("hie_id"))
 			if result is not None:
 				return result
 		if "city" in kwargs or "country" in kwargs:
-			result = searchForLocationByCityCountry(kwargs.get("city"), kwargs.get("country"))
+			result = cls.searchForLocationByCityCountry(kwargs.get("city"), kwargs.get("country"))
 			if result is not None:
 				return result
 		print("searchForLocation: default enpoint reached, returns NONE")
 		return None
 
 	@classmethod
-	def searchForLocationByHIEID(hie_id):
+	def searchForLocationByHIEID(cls, hie_id):
 		return db.session.query(cls).filter(cls.hie_id == hie_id).first()
 
 	@classmethod
-	def searchForLocationByCityCountry(city, country):
+	def searchForLocationByCityCountry(cls, city, country):
 		city = db.session.query(Cities).filter(Cities.name == city).first()
 		if city is None:
 			country = db.session.query(Countries).filter(Countries.name == country).first()
@@ -587,11 +595,11 @@ class Cities(db.Model):
 	@classmethod
 	def searchForCity(cls, **kwargs):
 		if "loc_id" in kwargs:
-			result = searchForCityByLOCID(kwargs.get("loc_id"))
+			result = cls.searchForCityByLOCID(kwargs.get("loc_id"))
 			if result is not None:
 				return result
 		if "name" in kwargs:
-			result = searchForCityByName(kwargs.get("name"))
+			result = cls.searchForCityByName(kwargs.get("name"))
 			return result
 		print("searchForCity: Default endpoint reached, returns NONE")
 		return None
@@ -633,11 +641,11 @@ class Countries(db.Model):
 	@classmethod
 	def searchForCountry(cls, **kwargs):
 		if "loc_id" in kwargs:
-			result = searchForCountryByLOCID(kwargs.get("loc_id"))
+			result = cls.searchForCountryByLOCID(kwargs.get("loc_id"))
 			if result is not None:
 				return result
 		if "name" in kwargs:
-			result = searchForCountryByName(kwargs.get("name"))
+			result = cls.searchForCountryByName(kwargs.get("name"))
 			return result
 		print("searchForCountry: Default endpoint reached, returns NONE")
 		return None
