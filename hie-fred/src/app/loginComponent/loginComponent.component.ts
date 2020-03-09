@@ -46,11 +46,10 @@ get f() { return this.loginForm.controls; }
 onSubmit() {
     this.submitted = true;
 
-    // stop here if form is invalid
-    if (this.loginForm.invalid) {
+    if (this.loginForm.invalid) { //does Not catch usernames/pw that dont exist in backend
         return;
     }
-
+    
     this.loading = true;
     this.authenticationService.login(this.f.username.value, this.f.password.value)
         .pipe(first())

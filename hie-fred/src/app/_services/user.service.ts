@@ -11,9 +11,9 @@ export class UserService {
 
     //we dont know if we need any of this!?
 
-    // getAll() {
-    //     return this.http.get<User[]>(`${config.apiUrl}/users`);
-    // }
+    getAll() {
+        return this.http.get<User[]>(`${config.apiUrl}/users`);
+    }
 
     // register(user: User) {
     //     return this.http.post(`${config.apiUrl}/users/register`, user);
