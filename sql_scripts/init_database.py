@@ -14,17 +14,19 @@ app = Flask(__name__)
 yam = yaml.load(open('db.yaml'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #suppress warnings
 # app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://{}:{}@{}/{}".format(
-# 			yam["mysql_user"],
-# 			yam["mysql_password"],
-# 			yam["mysql_host"],
-# 			yam["mysql_db"])
+# # 			yam["mysql_user"],
+# # 			yam["mysql_password"],
+# # 			yam["mysql_host"],
+# # 			yam["mysql_db"])
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///C:/Users/Matt/Documents/GitHub/cs-capstone-2020-hie/sql_scripts/testdb.db"
 db = SQLAlchemy(app)
 
 def main():
-	print("Building database: {}".format(yam['mysql_db']))
+	# print("Building database: {}".format(yam['mysql_db']))
 	init_model()
 	print("Database Built, surprisingly")
+	# CSV Calls
+	# print("Database Populated")
 
 def init_model():
 	"""Initializes the database and database tables with relationships"""
@@ -39,11 +41,6 @@ def init_model():
 	db.drop_all()
 	db.create_all()
 	db.session.commit()
-
-	# #test adding to multiple relation tables
-	# stu = Students('12345')
-	# hie = HighImpactExpierences(stu.su_id, 'SCOPE', 'CSC200')
-	# hie.location_id = 
 
 	Students.createStudent(9876, "M", False, False, "White", None, "SCOPE", "DGLOS", "-1", False, False, "Georgetown", "USA", "Summer", 2017, True, "fall", 2016, False, "spring", 2020)
 
