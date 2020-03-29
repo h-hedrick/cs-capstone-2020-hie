@@ -6,10 +6,10 @@ import yaml
 #flask app, the application as an object
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #suppress warnings
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://username:password@IPAddress/databaseName"
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://sanfordm:admin@35.184.115.233/testhie"
 
 # yaml file will hold sql or sensitive data, local machine only
-yam = yaml.load(open('db.yaml'))
+# yam = yaml.load(open('db.yaml'))
 
 db = SQLAlchemy(app) #bind database to app
 
@@ -48,12 +48,12 @@ class User(db.Model):
 	id =  db.Column(db.Integer, primary_key = True)
 	name = db.Column(db.String(50))
 	email = db.Column(db.String(120))
-	date_created = db.Column(db.DateTime, default=datetime.now)
+	# date_created = db.Column(db.DateTime, default=datetime.now)
 
 @app.route('/sql/<name>/<email>')
 def sqlAdd(name, email):
 	# code for adding entry to table User
-	user = User(name=name, email=email)
+	user = User(id=42, name=name, email=email)
 	db.session.add(user)
 	db.session.commit() # changes will not remain unless committed
 	return '<h1> Success! </h1>'
