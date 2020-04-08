@@ -1,0 +1,33 @@
+* {
+    font-family: HK Grotesk,sans-serif;
+}
+
+.login-column {
+    margin-top: 1em;
+    margin-left: 1em;
+}
+
+h2 {
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.form-group {
+    margin-top: .5em;
+}
+
+.invalid-feedback {
+    font-size: 13px;
+    color: red;
+}
+
+.button {
+    background-color: white;
+    border: 2px solid rgb(255, 205, 0); /* "southwestern gold" */
+    color: black;
+    padding: 8px 8px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 10px;
+  }
