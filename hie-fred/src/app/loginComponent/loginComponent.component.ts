@@ -5,11 +5,12 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { first } from 'rxjs/operators';
 
 import { AuthenticationService } from '../_services'
+import { AlertService } from 'app/_services/alert.service';
 
 @Component({
   selector: 'loginComponent', // inject with <loginComponent>...</loginComponent>
   templateUrl: './loginComponent.component.html',
-  styleUrls: ['./loginComponent.component.css'] //unused as of yet
+  styleUrls: ['./loginComponent.component.css']
 })
 export class loginComponent implements OnInit {
   loginForm: FormGroup;
@@ -20,11 +21,12 @@ export class loginComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-        private route: ActivatedRoute,
-        private router: Router,
-        private authenticationService: AuthenticationService
+    private route: ActivatedRoute,
+    private router: Router,
+    private authenticationService: AuthenticationService,
+    private alertService: AlertService
   ) { 
-    // redirect to home if already logged in
+    // redirect to body if already logged in
     if (this.authenticationService.currentUserValue) { 
       this.router.navigate(['/']);
     }
@@ -45,6 +47,9 @@ get f() { return this.loginForm.controls; }
 
 onSubmit() {
     this.submitted = true;
+
+    // reset alerts on submit
+    this.alertService.clear();
 
     if (this.loginForm.invalid) { //does Not catch usernames/pw that dont exist in backend
         return;

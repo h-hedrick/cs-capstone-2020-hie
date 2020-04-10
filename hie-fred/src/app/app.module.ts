@@ -1,5 +1,3 @@
-//this class is an Angular App Module, which groups together related components (?)
-
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
@@ -15,6 +13,7 @@ import { fakeBackendProvider,JwtInterceptor,ErrorInterceptor } from './_helpers'
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
+//@NgModule tag means this class is an Angular App Module, which groups together related components
 @NgModule({ 
   declarations: [
     AppComponent,
@@ -34,7 +33,7 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
 
-    fakeBackendProvider
+    fakeBackendProvider //TODO change this when
 
   ],
   bootstrap: [
