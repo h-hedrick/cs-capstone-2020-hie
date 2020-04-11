@@ -5,7 +5,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { first } from 'rxjs/operators';
 
 import { AuthenticationService } from '../_services'
-import { AlertService } from 'app/_services/alert.service';
+import { AlertService } from '../_services';
 
 @Component({
   selector: 'loginComponent', // inject with <loginComponent>...</loginComponent>
