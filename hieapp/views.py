@@ -1,8 +1,10 @@
 # this is where API routes are defined
 # can be extended into a larger folder
 
-from flask import Flask, render_template, make_response
+from flask import Flask, jsonify, request, render_template, make_response
 from hieapp import app
+from hieapp.dbcore import db
+from hieapp.entities import *
 
 #TODO: https://github.com/shea256/angular-flask/blob/master/angular_flask/controllers.py
 @app.route('/')
@@ -12,8 +14,22 @@ def basic_pages(**kwargs):
 	# I think this is where angular gets called?
 	# angular call in index.html?
 
-# TODO: other routes if need to be defined here, else angular?
+# TODO: other routes if need to be defined here, else angular? ask alice
+
+@app.route('/home')
+@app.route('/home/default', methods=['GET'])
+def getDefaultData():
+
+	#get data from db
+	data = db.session.query() #TODO QUERY
+
+	#transform data into json using entity
+	schema = studentEntity(many=True)
+	res = schema.dump(data)
+
+	return jsonify(res.data)
 
 @app.errorhandler(404)
 def page_not_found(e):
+	#TODO: make 404 template
 	return render_template('404.html'), 404
