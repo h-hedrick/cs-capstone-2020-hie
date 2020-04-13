@@ -22,6 +22,14 @@
         <button [disabled]="loading" class="button"> 
             <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
             LOGIN
+        </button>        
+    </div>
+    <!-- temporary button to route directly from loginComponent to body
+            becasue authentication is unfinished and this won't get deployed soon anyway 4/13/20-->
+    <div class="form-group">
+        <button [disabled]="loading" class="button"> 
+            <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+            dev: skip login
         </button>
     </div>
 </form>
