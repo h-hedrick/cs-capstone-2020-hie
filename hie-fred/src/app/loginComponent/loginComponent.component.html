@@ -24,12 +24,9 @@
             LOGIN
         </button>        
     </div>
-    <!-- temporary button to route directly from loginComponent to body
-            becasue authentication is unfinished and this won't get deployed soon anyway 4/13/20-->
-    <div class="form-group">
-        <button [disabled]="loading" class="button"> 
-            <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
-            dev: skip login (delete this button)
-        </button>
-    </div>
+    <!-- temporary link that routes directly from loginComponent to body
+    becasue authentication is unfinished and this doesn't seem like it'll actually get deployed anyway 4/13/20-->
+    <nav>
+        <a routerLink = "/home">dev: skip login</a>
+    </nav> 
 </form>
