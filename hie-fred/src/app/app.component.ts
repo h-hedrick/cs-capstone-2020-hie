@@ -31,3 +31,5 @@ export class AppComponent {
     this.router.navigate(['/login']);
   }
 }
+
+  //getDefaultData() //does this need to be here too? @
