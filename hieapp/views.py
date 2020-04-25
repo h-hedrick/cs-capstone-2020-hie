@@ -11,8 +11,8 @@ from hieapp.entities import *
 @app.route('/login', methods=['GET','POST'])
 def basic_pages(**kwargs):
 	return make_response(open('hieapp/templates/index.html').read())
-	# I think this is where angular gets called?
-	# angular call in index.html?
+	# I think this is where angular gets called
+	# angular call to index.html --> after that, angular routing(?)
 
 # TODO: other routes if need to be defined here, else angular? ask alice
 
