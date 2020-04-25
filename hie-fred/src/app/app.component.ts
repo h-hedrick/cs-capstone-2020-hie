@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthenticationService } from './_services';
+
 /*
 "Angular components can subscribe() to the public currentUser: Observable property 
 to be notified of changes, and notifications are sent when the 
@@ -31,3 +32,5 @@ export class AppComponent {
     this.router.navigate(['/login']);
   }
 }
+
+  //getDefaultData() //does this need to be here too? @

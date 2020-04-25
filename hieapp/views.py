@@ -17,7 +17,7 @@ def basic_pages(**kwargs):
 # TODO: other routes if need to be defined here, else angular? ask alice
 
 @app.route('/home')
-@app.route('/home/default', methods=['GET'])
+@app.route('/home/default', methods=['GET']) #methods for anular to call
 def getDefaultData():
 
 	#get data from db

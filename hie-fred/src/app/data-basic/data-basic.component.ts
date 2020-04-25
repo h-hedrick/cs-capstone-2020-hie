@@ -10,6 +10,8 @@ export class DataBasicComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    //getDefaultData()
+    //how do i call this, its from veiws.py
   }
 
 }
