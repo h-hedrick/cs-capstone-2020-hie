@@ -22,6 +22,8 @@ Southwestern University students participate in a variety of High Impact Experie
 
 * Fork or download the repository
 * Install dependancies
+* Inside "instance" folder, change database URI info and create new secret key
+* If using custom data, please consult the [User]() or [Develpers Manual]()
 * From folder, run command from CLI
 ```
 flask run
@@ -35,15 +37,15 @@ flask run
 
 ## Authors
 
-Matt Sanford: [email](Mattsanford@protonmail.com)
+Matt Sanford: [[email](Mattsanford@protonmail.com)]
 
-Hazel Hedrick: [email]()
+Hazel Hedrick: [[email]()]
 
-Darwin Johnson: [email]()
+Darwin Johnson: [[email]()]
 
-Victoria Negus: [email]()
+Victoria Negus: [[email]()]
 
-Alice Quintanilla: [email]()
+Alice Quintanilla: [[email]()]
 
 ## Acknowledgments
 
@@ -54,5 +56,5 @@ Alice Quintanilla: [email]()
 * Dr. Williams
 * Hal Hoeppner
 
-### Website and resources used
+### Websites and resources used
 * 
