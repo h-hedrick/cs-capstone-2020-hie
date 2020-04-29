@@ -32,4 +32,4 @@ def getDefaultData():
 @app.errorhandler(404)
 def page_not_found(e):
 	#TODO: make 404 template
-	return render_template('404.html'), 404
+	return render_template('templates/404.html'), 404

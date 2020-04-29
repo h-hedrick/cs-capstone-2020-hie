@@ -45,7 +45,7 @@ Darwin Johnson: [[email]()]
 
 Victoria Negus: [[email]()]
 
-Alice Quintanilla: [[email]()]
+Alice Quintanilla: [[email](alice.quintanilla98@gmail.com)]
 
 ## Acknowledgments
 
@@ -55,6 +55,3 @@ Alice Quintanilla: [[email]()]
 * Dr. Sarah Brackmann
 * Dr. Williams
 * Hal Hoeppner
-
-### Websites and resources used
-* 
