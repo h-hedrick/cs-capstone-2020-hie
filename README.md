@@ -39,11 +39,11 @@ flask run
 
 Matt Sanford: [[email](Mattsanford@protonmail.com)]
 
-Hazel Hedrick: [[email]()]
+Hazel Hedrick
 
-Darwin Johnson: [[email]()]
+Darwin Johnson
 
-Victoria Negus: [[email]()]
+Victoria Negus
 
 Alice Quintanilla: [[email](alice.quintanilla98@gmail.com)]
 
