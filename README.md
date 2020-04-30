@@ -21,19 +21,19 @@ Southwestern University students participate in a variety of High Impact Experie
 ### Installation and Running Program
 
 * Fork or download the repository
-* Install dependancies
+* Install dependancies for Flask and Angular
 * Inside "instance" folder, change database URI info and create new secret key
-* If using custom data, please consult the [User]() or [Develpers Manual]()
+* If using custom data, please consult the [Develpers Manual](https://docs.google.com/document/d/11v9bZ9jAxd6rLdgNfTPL05XJn2khUwS5kAbbUEdu1mc/edit?usp=sharing)
 * From folder, run command from CLI
 ```
 flask run
 ```
 * Server should start on [localhost:5000](http://localhost:5000/)
+* Due to routing issues, a file testWithFrontEnd.py is included which can be run as a normal python executable
 
 ## Help
 
-* [User Manual]()
-* [Developers Manual]()
+* [Developers Manual](https://docs.google.com/document/d/11v9bZ9jAxd6rLdgNfTPL05XJn2khUwS5kAbbUEdu1mc/edit?usp=sharing)
 
 ## Authors
 

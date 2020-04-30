@@ -8,8 +8,9 @@ from hieapp.entities import *
 
 #TODO: https://github.com/shea256/angular-flask/blob/master/angular_flask/controllers.py
 @app.route('/')
-@app.route('/login', methods=['GET','POST'])
+# @app.route('/login', methods=['GET','POST'])
 def basic_pages(**kwargs):
+	# return render_template('index.html')
 	return make_response(open('hieapp/templates/index.html').read())
 	# I think this is where angular gets called
 	# angular call to index.html --> after that, angular routing(?)
@@ -31,5 +32,4 @@ def getDefaultData():
 
 @app.errorhandler(404)
 def page_not_found(e):
-	#TODO: make 404 template
 	return render_template('templates/404.html'), 404

@@ -1,1 +1,11 @@
-TODO: lists all requirements for project
+Python 3.7.1
+Flask 1.0.2
+Flask-SQLAlchemy
+Flask-CORS
+Pandas
+Marshmallow
+Bokeh
+SQLite
+Angular 9.0.1
+nvm-windows
+node.js 12.16.0
